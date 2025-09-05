@@ -1,0 +1,686 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SecurePass Pro - Professional Password Generator</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: linear-gradient(135deg, #B8E6B8 0%, #FFB6C1 100%);
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #333;
+            overflow-x: hidden;
+        }
+
+        .container {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            width: 90%;
+            max-width: 500px;
+            border: 1px solid rgba(255,255,255,0.2);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .container::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, #90EE90, #FFB6C1, #98FB98, #F0C0C0);
+            background-size: 300% 100%;
+            animation: gradientShift 3s ease infinite;
+        }
+
+        @keyframes gradientShift {
+            0%, 100% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            font-weight: 700;
+            background: linear-gradient(135deg, #5A9A5A, #D5737A);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 10px;
+        }
+
+        .header .subtitle {
+            color: #666;
+            font-size: 1.1em;
+            font-weight: 500;
+        }
+
+        .security-badge {
+            display: inline-flex;
+            align-items: center;
+            background: linear-gradient(135deg, #90EE90, #7DC97D);
+            color: white;
+            padding: 8px 16px;
+            border-radius: 25px;
+            font-size: 0.9em;
+            font-weight: 600;
+            margin-top: 10px;
+            box-shadow: 0 4px 15px rgba(144, 238, 144, 0.3);
+        }
+
+        .form-group {
+            margin-bottom: 25px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #444;
+            font-size: 1em;
+        }
+
+        .form-group input,
+        .form-group select {
+            width: 100%;
+            padding: 15px;
+            border: 2px solid #e1e5e9;
+            border-radius: 12px;
+            font-size: 1em;
+            transition: all 0.3s ease;
+            background: white;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus {
+            border-color: #90EE90;
+            outline: none;
+            box-shadow: 0 0 0 4px rgba(144, 238, 144, 0.1);
+            transform: translateY(-2px);
+        }
+
+        .checkbox-group {
+            display: flex;
+            align-items: center;
+            margin-top: 10px;
+        }
+
+        .checkbox-group input[type="checkbox"] {
+            width: auto;
+            margin-right: 10px;
+            transform: scale(1.2);
+        }
+
+        .generate-btn {
+            width: 100%;
+            background: linear-gradient(135deg, #90EE90, #FFB6C1);
+            color: white;
+            border: none;
+            padding: 18px;
+            border-radius: 12px;
+            font-size: 1.1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-bottom: 20px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .generate-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 25px rgba(144, 238, 144, 0.4);
+        }
+
+        .generate-btn:active {
+            transform: translateY(-1px);
+        }
+
+        .generate-btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+            transition: left 0.5s;
+        }
+
+        .generate-btn:hover::before {
+            left: 100%;
+        }
+
+        .password-section {
+            background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+            border-radius: 15px;
+            padding: 25px;
+            margin: 20px 0;
+            border: 2px dashed #90EE90;
+            position: relative;
+        }
+
+        .password-display {
+            background: #2d3436;
+            color: #90EE90;
+            font-family: 'Courier New', monospace;
+            padding: 20px;
+            border-radius: 10px;
+            margin: 15px 0;
+            font-size: 1.3em;
+            letter-spacing: 3px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+            min-height: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 1px solid #555;
+        }
+
+        .password-display::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(144,238,144,0.1), transparent);
+            animation: scan 2s infinite;
+        }
+
+        @keyframes scan {
+            0% { left: -100%; }
+            100% { left: 100%; }
+        }
+
+        .password-hidden {
+            color: #FFB6C1;
+            font-size: 2em;
+            letter-spacing: 5px;
+        }
+
+        .password-controls {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .control-btn {
+            background: #90EE90;
+            color: white;
+            border: none;
+            padding: 12px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            font-size: 0.95em;
+        }
+
+        .control-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(144, 238, 144, 0.3);
+        }
+
+        .control-btn.copy-btn {
+            background: linear-gradient(135deg, #98FB98, #7DC97D);
+        }
+
+        .control-btn.show-btn {
+            background: linear-gradient(135deg, #FFB6C1, #F08080);
+        }
+
+        .strength-meter {
+            margin: 15px 0;
+        }
+
+        .strength-bar {
+            width: 100%;
+            height: 8px;
+            background: #e0e0e0;
+            border-radius: 4px;
+            overflow: hidden;
+            margin: 10px 0;
+        }
+
+        .strength-fill {
+            height: 100%;
+            border-radius: 4px;
+            transition: all 0.5s ease;
+            width: 0%;
+        }
+
+        .strength-text {
+            font-weight: 600;
+            margin-bottom: 5px;
+        }
+
+        .status-message {
+            margin: 15px 0;
+            padding: 12px;
+            border-radius: 8px;
+            font-weight: 500;
+            text-align: center;
+            animation: fadeIn 0.5s ease;
+        }
+
+        .status-success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .status-error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        .status-warning {
+            background: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffeaa7;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: linear-gradient(135deg, #98FB98, #7DC97D);
+            color: white;
+            padding: 16px 24px;
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            z-index: 1000;
+            transform: translateX(400px);
+            transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            font-weight: 600;
+            backdrop-filter: blur(10px);
+        }
+
+        .notification.show {
+            transform: translateX(0);
+        }
+
+        .footer {
+            text-align: center;
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid #e0e0e0;
+            color: #666;
+            font-size: 0.9em;
+        }
+
+        .footer a {
+            color: #5A9A5A;
+            text-decoration: none;
+            font-weight: 600;
+            margin: 0 10px;
+            transition: color 0.3s ease;
+        }
+
+        .footer a:hover {
+            color: #D5737A;
+        }
+
+        .loading {
+            display: none;
+            width: 40px;
+            height: 40px;
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #90EE90;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 20px auto;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        @media (max-width: 600px) {
+            .container {
+                margin: 20px;
+                padding: 25px;
+            }
+            
+            .header h1 {
+                font-size: 2em;
+            }
+            
+            .password-controls {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>SecurePass Pro</h1>
+            <p class="subtitle">Professional Password Generator</p>
+            <div class="security-badge">
+                AES-256 Encrypted
+            </div>
+        </div>
+
+        {% if error %}
+            <div class="status-message status-error">
+                Error: {{ error }}
+            </div>
+        {% endif %}
+
+        {% if success %}
+            <div class="password-section">
+                <h3 style="text-align: center; margin-bottom: 15px; color: #333;">
+                    Password Generated Successfully
+                </h3>
+                
+                <div class="password-display" id="passwordDisplay">
+                    <span class="password-hidden" id="passwordContent">{{ '●' * password_length }}</span>
+                </div>
+
+                <div class="strength-meter" id="strengthMeter">
+                    <div class="strength-text" id="strengthText">Analyzing strength...</div>
+                    <div class="strength-bar">
+                        <div class="strength-fill" id="strengthFill"></div>
+                    </div>
+                </div>
+
+                <div class="password-controls">
+                    <button class="control-btn show-btn" onclick="togglePasswordVisibility()" id="toggleBtn">
+                        Reveal Password
+                    </button>
+                    <button class="control-btn copy-btn" onclick="copyToClipboard()" id="copyBtn">
+                        Copy to Clipboard
+                    </button>
+                </div>
+
+                <div id="statusMessage"></div>
+
+                {% if site_name %}
+                    <div style="text-align: center; margin-top: 15px; color: #666;">
+                        Encrypted and saved for: <strong>{{ site_name }}</strong>
+                    </div>
+                {% endif %}
+            </div>
+
+            <button class="generate-btn" onclick="location.reload()">
+                Generate New Password
+            </button>
+
+            <!-- Hidden session token for secure password retrieval -->
+            <script>
+                window.sessionToken = "{{ session_token }}";
+                window.passwordLength = { password_length };
+                window.realPassword = null;
+                window.passwordVisible = false;
+            </script>
+        {% else %}
+            <form method="POST" id="passwordForm">
+                <div class="form-group">
+                    <label for="site">Website/Service Name (Optional)</label>
+                    <input type="text" id="site" name="site" placeholder="e.g., Gmail, Facebook, Banking..." autocomplete="off">
+                </div>
+                
+                <div class="form-group">
+                    <label for="length">Password Length</label>
+                    <select id="length" name="length">
+                        <option value="8">8 characters (Basic)</option>
+                        <option value="12" selected>12 characters (Recommended)</option>
+                        <option value="16">16 characters (Strong)</option>
+                        <option value="20">20 characters (Very Strong)</option>
+                        <option value="24">24 characters (Military Grade)</option>
+                        <option value="32">32 characters (Maximum Security)</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <div class="checkbox-group">
+                        <input type="checkbox" id="include_symbols" name="include_symbols" checked>
+                        <label for="include_symbols">Include special characters (!@#$%^&*)</label>
+                    </div>
+                </div>
+                
+                <button type="submit" class="generate-btn">
+                    Generate Secure Password
+                </button>
+            </form>
+        {% endif %}
+
+        <div class="loading" id="loading"></div>
+
+        <div class="footer">
+            <p>This is a personal project for educational purposes</p>
+            <div style="margin-top: 10px;">
+                <a href="https://www.linkedin.com/in/anda-maria-cristina-scarlat-3640692b3" target="_blank">LinkedIn</a>
+                <a href="https://github.com/CristinaS0211" target="_blank">GitHub</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Notification popup -->
+    <div id="notification" class="notification"></div>
+
+    <script>
+        async function fetchPassword() {
+            try {
+                const response = await fetch('/api/get-password', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ token: window.sessionToken })
+                });
+
+                const data = await response.json();
+                if (data.success) {
+                    window.realPassword = data.password;
+                    await checkPasswordStrength();
+                    return true;
+                } else {
+                    showStatus('Error: ' + data.error, 'error');
+                    return false;
+                }
+            } catch (error) {
+                console.error('Error fetching password:', error);
+                showStatus('Network error occurred', 'error');
+                return false;
+            }
+        }
+
+        async function checkPasswordStrength() {
+            try {
+                const response = await fetch('/api/password-strength', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ token: window.sessionToken })
+                });
+
+                const data = await response.json();
+                if (data.success) {
+                    const strengthText = document.getElementById('strengthText');
+                    const strengthFill = document.getElementById('strengthFill');
+                    
+                    strengthText.textContent = `Strength: ${data.strength} (${data.score}/100)`;
+                    strengthFill.style.width = data.score + '%';
+                    strengthFill.style.backgroundColor = data.color;
+                }
+            } catch (error) {
+                console.error('Error checking strength:', error);
+            }
+        }
+
+        function showNotification(message, type = 'success', duration = 4000) {
+            const notification = document.getElementById('notification');
+            notification.textContent = message;
+            notification.className = 'notification show';
+            
+            if (type === 'error') {
+                notification.style.background = 'linear-gradient(135deg, #FFB6C1, #F08080)';
+            } else {
+                notification.style.background = 'linear-gradient(135deg, #98FB98, #7DC97D)';
+            }
+            
+            setTimeout(() => {
+                notification.classList.remove('show');
+            }, duration);
+        }
+
+        function showStatus(message, type = 'success') {
+            const statusDiv = document.getElementById('statusMessage');
+            if (!statusDiv) return;
+            
+            statusDiv.textContent = message;
+            statusDiv.className = `status-message status-${type}`;
+            
+            setTimeout(() => {
+                statusDiv.textContent = '';
+                statusDiv.className = '';
+            }, 5000);
+        }
+
+        async function togglePasswordVisibility() {
+            const toggleBtn = document.getElementById('toggleBtn');
+            const passwordContent = document.getElementById('passwordContent');
+            
+            if (!window.passwordVisible) {
+                if (!window.realPassword) {
+                    const success = await fetchPassword();
+                    if (!success) return;
+                }
+                
+                // Show real password
+                passwordContent.textContent = window.realPassword;
+                passwordContent.className = '';
+                toggleBtn.textContent = 'Hide Password';
+                window.passwordVisible = true;
+                showStatus('Password is now visible!', 'warning');
+                
+                // Auto-hide after 15 seconds
+                setTimeout(() => {
+                    if (window.passwordVisible) {
+                        togglePasswordVisibility();
+                    }
+                }, 15000);
+                
+            } else {
+                // Hide password
+                passwordContent.textContent = '●'.repeat(window.passwordLength);
+                passwordContent.className = 'password-hidden';
+                toggleBtn.textContent = 'Reveal Password';
+                window.passwordVisible = false;
+                showStatus('Password secured and hidden', 'success');
+            }
+        }
+
+        async function copyToClipboard() {
+            const copyBtn = document.getElementById('copyBtn');
+            const originalText = copyBtn.textContent;
+            
+            try {
+                if (!window.realPassword) {
+                    const success = await fetchPassword();
+                    if (!success) return;
+                }
+
+                copyBtn.textContent = 'Copying...';
+                
+                if (navigator.clipboard && navigator.clipboard.writeText) {
+                    await navigator.clipboard.writeText(window.realPassword);
+                    copyBtn.textContent = 'Copied!';
+                    showStatus('Password securely copied to clipboard!', 'success');
+                    showNotification('Password copied with secure encryption!');
+                } else {
+                    // Fallback method
+                    const textarea = document.createElement('textarea');
+                    textarea.value = window.realPassword;
+                    textarea.style.position = 'fixed';
+                    textarea.style.opacity = '0';
+                    document.body.appendChild(textarea);
+                    textarea.focus();
+                    textarea.select();
+                    
+                    const successful = document.execCommand('copy');
+                    document.body.removeChild(textarea);
+                    
+                    if (successful) {
+                        copyBtn.textContent = 'Copied!';
+                        showStatus('Password securely copied to clipboard!', 'success');
+                        showNotification('Password copied successfully!');
+                    } else {
+                        throw new Error('Copy command failed');
+                    }
+                }
+                
+            } catch (error) {
+                console.error('Copy failed:', error);
+                copyBtn.textContent = 'Failed';
+                showStatus('Copy failed. Please reveal password and copy manually.', 'error');
+                showNotification('Copy failed - try manual copy', 'error');
+            }
+            
+            setTimeout(() => {
+                copyBtn.textContent = originalText;
+            }, 3000);
+        }
+
+        // Auto-operations when page loads
+        window.addEventListener('load', async function() {
+            if (window.sessionToken) {
+                // Fetch password and check strength
+                await fetchPassword();
+                
+                // Auto-copy after 2 seconds
+                setTimeout(async () => {
+                    await copyToClipboard();
+                    setTimeout(() => {
+                        showNotification('Password automatically secured in clipboard!');
+                    }, 500);
+                }, 2000);
+            }
+        });
+
+        // Form submission with loading
+        document.getElementById('passwordForm')?.addEventListener('submit', function() {
+            document.getElementById('loading').style.display = 'block';
+        });
+
+        // Security: Clear real password from memory when leaving page
+        window.addEventListener('beforeunload', function() {
+            window.realPassword = null;
+        });
+    </script>
+</body>
+</html>
