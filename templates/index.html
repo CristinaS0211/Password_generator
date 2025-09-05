@@ -533,8 +533,7 @@
             </div>
         </div>
 
-        <!-- Demo form since we can't use Flask template syntax -->
-        <form method="POST" id="passwordForm">
+        <form id="passwordForm">
             <div class="form-group">
                 <label for="site">Website/Service Name (Optional)</label>
                 <input type="text" id="site" name="site" placeholder="e.g., Gmail, Facebook, Banking..." autocomplete="off">
@@ -559,13 +558,12 @@
                 </div>
             </div>
             
-            <button type="submit" class="generate-btn" onclick="showDemo(event)">
+            <button type="submit" class="generate-btn">
                 Generate Secure Password
             </button>
         </form>
 
-        <!-- Demo password section (hidden initially) -->
-        <div class="password-section" id="demoPassword" style="display: none;">
+        <div class="password-section" id="passwordSection" style="display: none;">
             <h3 style="text-align: center; margin-bottom: 15px; color: #333;">
                 Password Generated Successfully
             </h3>
@@ -575,17 +573,17 @@
             </div>
 
             <div class="strength-meter" id="strengthMeter">
-                <div class="strength-text" id="strengthText">Strength: Very Strong (95/100)</div>
+                <div class="strength-text" id="strengthText">Calculating strength...</div>
                 <div class="strength-bar">
-                    <div class="strength-fill" id="strengthFill" style="width: 95%; background-color: #28a745;"></div>
+                    <div class="strength-fill" id="strengthFill"></div>
                 </div>
             </div>
 
             <div class="password-controls">
-                <button class="control-btn show-btn" onclick="toggleDemo()" id="toggleBtn">
+                <button class="control-btn show-btn" onclick="togglePassword()" id="toggleBtn">
                     Reveal Password
                 </button>
-                <button class="control-btn copy-btn" onclick="copyDemo()" id="copyBtn">
+                <button class="control-btn copy-btn" onclick="copyPassword()" id="copyBtn">
                     Copy to Clipboard
                 </button>
             </div>
@@ -619,44 +617,180 @@
     <div id="notification" class="notification"></div>
 
     <script>
-        let demoPassword = 'K9#mX7@pL2$w';
+        let currentPassword = '';
         let passwordVisible = false;
 
-        function showDemo(event) {
-            event.preventDefault();
+        // Character sets for password generation
+        const charSets = {
+            lowercase: 'abcdefghijklmnopqrstuvwxyz',
+            uppercase: 'ABCDEFGHIJKLMNOPQRSTUVWXYZ',
+            numbers: '0123456789',
+            symbols: '!@#$%^&*()_+-=[]{}|;:,.<>?'
+        };
+
+        function generateSecurePassword(length, includeSymbols) {
+            let charset = charSets.lowercase + charSets.uppercase + charSets.numbers;
+            if (includeSymbols) {
+                charset += charSets.symbols;
+            }
+
+            let password = '';
+            
+            // Ensure at least one character from each required set
+            password += getRandomChar(charSets.lowercase);
+            password += getRandomChar(charSets.uppercase);
+            password += getRandomChar(charSets.numbers);
+            
+            if (includeSymbols) {
+                password += getRandomChar(charSets.symbols);
+            }
+
+            // Fill the rest of the password length
+            const remainingLength = length - password.length;
+            for (let i = 0; i < remainingLength; i++) {
+                password += getRandomChar(charset);
+            }
+
+            // Shuffle the password to randomize character positions
+            return shuffleString(password);
+        }
+
+        function getRandomChar(str) {
+            const crypto = window.crypto || window.msCrypto;
+            const array = new Uint8Array(1);
+            crypto.getRandomValues(array);
+            return str[array[0] % str.length];
+        }
+
+        function shuffleString(str) {
+            const array = str.split('');
+            const crypto = window.crypto || window.msCrypto;
+            
+            for (let i = array.length - 1; i > 0; i--) {
+                const randomBytes = new Uint8Array(1);
+                crypto.getRandomValues(randomBytes);
+                const j = randomBytes[0] % (i + 1);
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+            
+            return array.join('');
+        }
+
+        function calculatePasswordStrength(password) {
+            let score = 0;
+            let feedback = [];
+
+            // Length scoring
+            if (password.length >= 12) score += 25;
+            else if (password.length >= 8) score += 15;
+            else score += 5;
+
+            // Character variety scoring
+            if (/[a-z]/.test(password)) score += 15;
+            if (/[A-Z]/.test(password)) score += 15;
+            if (/[0-9]/.test(password)) score += 15;
+            if (/[^A-Za-z0-9]/.test(password)) score += 20;
+
+            // Pattern penalties
+            if (/(.)\1{2,}/.test(password)) score -= 10; // repeated characters
+            if (/012|123|234|345|456|567|678|789|890/.test(password)) score -= 10; // sequences
+            
+            // Bonus for good length
+            if (password.length >= 16) score += 10;
+            if (password.length >= 20) score += 10;
+
+            let strength = 'Weak';
+            let color = '#dc3545';
+
+            if (score >= 85) {
+                strength = 'Excellent';
+                color = '#28a745';
+            } else if (score >= 70) {
+                strength = 'Very Strong';
+                color = '#28a745';
+            } else if (score >= 55) {
+                strength = 'Strong';
+                color = '#ffc107';
+            } else if (score >= 40) {
+                strength = 'Fair';
+                color = '#fd7e14';
+            }
+
+            return {
+                score: Math.min(100, Math.max(0, score)),
+                strength: strength,
+                color: color
+            };
+        }
+
+        function updateStrengthMeter(password) {
+            const analysis = calculatePasswordStrength(password);
+            
+            document.getElementById('strengthText').textContent = 
+                `Strength: ${analysis.strength} (${analysis.score}/100)`;
+            
+            const strengthFill = document.getElementById('strengthFill');
+            strengthFill.style.width = analysis.score + '%';
+            strengthFill.style.backgroundColor = analysis.color;
+        }
+
+        document.getElementById('passwordForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const length = parseInt(document.getElementById('length').value);
+            const includeSymbols = document.getElementById('include_symbols').checked;
+            
+            // Show loading
             document.getElementById('loading').style.display = 'block';
             document.getElementById('passwordForm').style.display = 'none';
             
             setTimeout(() => {
-                document.getElementById('loading').style.display = 'none';
-                document.getElementById('demoPassword').style.display = 'block';
-                showNotification('Demo password generated successfully!');
+                // Generate new password
+                currentPassword = generateSecurePassword(length, includeSymbols);
                 
-                // Auto-copy demo
+                // Reset visibility state
+                passwordVisible = false;
+                const passwordContent = document.getElementById('passwordContent');
+                passwordContent.textContent = '●'.repeat(Math.min(length, 16));
+                passwordContent.className = 'password-hidden';
+                document.getElementById('toggleBtn').textContent = 'Reveal Password';
+                
+                // Update strength meter
+                updateStrengthMeter(currentPassword);
+                
+                // Hide loading and show results
+                document.getElementById('loading').style.display = 'none';
+                document.getElementById('passwordSection').style.display = 'block';
+                document.getElementById('passwordForm').style.display = 'block';
+                
+                showNotification('New secure password generated!');
+                
+                // Auto-copy after a short delay
                 setTimeout(() => {
-                    copyDemo();
+                    copyPassword();
                 }, 1000);
-            }, 2000);
-        }
+            }, 1500);
+        });
 
-        function toggleDemo() {
+        function togglePassword() {
             const toggleBtn = document.getElementById('toggleBtn');
             const passwordContent = document.getElementById('passwordContent');
             
             if (!passwordVisible) {
-                passwordContent.textContent = demoPassword;
+                passwordContent.textContent = currentPassword;
                 passwordContent.className = '';
                 toggleBtn.textContent = 'Hide Password';
                 passwordVisible = true;
                 showStatus('Password is now visible!', 'warning');
                 
+                // Auto-hide after 15 seconds
                 setTimeout(() => {
                     if (passwordVisible) {
-                        toggleDemo();
+                        togglePassword();
                     }
                 }, 15000);
             } else {
-                passwordContent.textContent = '●●●●●●●●●●●●';
+                passwordContent.textContent = '●'.repeat(Math.min(currentPassword.length, 16));
                 passwordContent.className = 'password-hidden';
                 toggleBtn.textContent = 'Reveal Password';
                 passwordVisible = false;
@@ -664,19 +798,24 @@
             }
         }
 
-        function copyDemo() {
+        function copyPassword() {
+            if (!currentPassword) {
+                showStatus('No password to copy!', 'error');
+                return;
+            }
+
             const copyBtn = document.getElementById('copyBtn');
             const originalText = copyBtn.textContent;
             
             copyBtn.textContent = 'Copying...';
             
-            navigator.clipboard.writeText(demoPassword).then(() => {
+            navigator.clipboard.writeText(currentPassword).then(() => {
                 copyBtn.textContent = 'Copied!';
-                showStatus('Demo password copied to clipboard!', 'success');
+                showStatus('Password copied to clipboard!', 'success');
                 showNotification('Password copied successfully!');
             }).catch(() => {
                 copyBtn.textContent = 'Failed';
-                showStatus('Copy failed - this is a demo', 'error');
+                showStatus('Copy failed - please try again', 'error');
             });
             
             setTimeout(() => {
@@ -712,6 +851,14 @@
                 statusDiv.className = '';
             }, 5000);
         }
+
+        // Generate an initial password when the page loads
+        window.addEventListener('load', function() {
+            // Wait a moment then trigger initial generation
+            setTimeout(() => {
+                document.getElementById('passwordForm').dispatchEvent(new Event('submit'));
+            }, 500);
+        });
     </script>
 </body>
 </html>
