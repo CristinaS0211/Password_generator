@@ -3,9 +3,9 @@ from cryptography.fernet import Fernet
 import random, string, os, secrets
 
 app = Flask(__name__)
-app.secret_key = secrets.token_hex(32)  # Secure session key
+app.secret_key = secrets.token_hex(32)  
 
-# ----------------- Security Functions -----------------
+
 def get_or_create_key():
     """Get encryption key or create if doesn't exist"""
     if not os.path.exists("master.key"):
@@ -27,7 +27,7 @@ def generate_secure_password(length=12, include_symbols=True):
     if include_symbols:
         chars += "!@#$%^&*()_+-=[]{}|;:,.<>?"
     
-    # Ensure at least one character from each category
+
     password = []
     password.append(secrets.choice(string.ascii_uppercase))
     password.append(secrets.choice(string.ascii_lowercase))
@@ -35,15 +35,14 @@ def generate_secure_password(length=12, include_symbols=True):
     if include_symbols:
         password.append(secrets.choice("!@#$%^&*"))
     
-    # Fill remaining length with random choices
+    
     for _ in range(length - len(password)):
         password.append(secrets.choice(chars))
     
-    # Shuffle the password
     secrets.SystemRandom().shuffle(password)
     return ''.join(password)
 
-# ----------------- Routes -----------------
+
 @app.route("/", methods=["GET", "POST"])
 def index():
     if request.method == "POST":
@@ -163,14 +162,15 @@ def check_password_strength():
     except Exception:
         return jsonify({"success": False, "error": "Error checking strength"})
 
-# ----------------- Safe Run -----------------
+
 if __name__ == "__main__":
     print(" SecurePass Pro - Professional Password Generator")
     print(" Encryption keys will be automatically generated")
 
     if os.environ.get("RENDER") or os.environ.get("PORT"):
-        # 👉 Pe Render: aplicația e publică
+        
         app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 5000)), debug=False)
     else:
-        # 👉 Local: doar pentru tine
+        
         app.run(host="127.0.0.1", port=5000, debug=True)
+
